@@ -31,7 +31,6 @@ class RotatingLoggingBackend implements LoggingBackend {
 
     _byteCounter += byteLength;
 
-    print("Byte count is $_byteCounter of $_maxSizeInBytes (${_byteCounter / _maxSizeInBytes})");
     if (_byteCounter / _maxSizeInBytes > 0.99) {
       cycle();
     }
