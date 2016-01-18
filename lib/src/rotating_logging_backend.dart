@@ -15,7 +15,6 @@ class RotatingLoggingBackend implements LoggingBackend {
     _baseFileName = baseFileName;
   }
 
-
   Future start() async {
     var file = new File(_baseFileName);
     _fileSink = await file.openWrite(mode: FileMode.WRITE_ONLY);
@@ -26,16 +25,25 @@ class RotatingLoggingBackend implements LoggingBackend {
   }
 
   void log(LogRecord record) {
-    var string = record.toString();
-    int byteLength = string.length;
+    try {
+      var string = record.toString();
+      int byteLength = string.length;
 
-    _byteCounter += byteLength;
+      _byteCounter += byteLength;
 
-    if (_byteCounter / _maxSizeInBytes > 0.99) {
-      cycle();
+      if (_byteCounter / _maxSizeInBytes > 0.99) {
+        cycle();
+      }
+
+      _logRecord(record);
+    } catch (e, stack) {
+      var currentDir = Directory.current.path;
+      var crashFilePath = [currentDir, "crash.log"].join("/");
+      var crashFile = new File(crashFilePath);
+      var crashSync = crashFile.openSync(mode: FileMode.WRITE_ONLY);
+      crashSync.writeStringSync("Error: $e\nStack Trace:\n$stack");
+      crashSync.closeSync();
     }
-
-    _logRecord(record);
   }
 
   Future cycle() async {
