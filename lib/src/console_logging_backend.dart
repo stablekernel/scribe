@@ -8,7 +8,6 @@ class ConsoleBackend implements LoggingBackend {
     _nonBlocking = nonBlocking;
   }
 
-
   Future start() async {
     if (_nonBlocking) {
       outputSink = stdout.nonBlocking;
