@@ -6,7 +6,7 @@ part of scribe;
 
 class LoggingServer {
   LoggingServer(List<LoggingBackend> backends) {
-    _backends = backends;
+    _backends = backends ?? [];
   }
 
   List<LoggingBackend> _backends;
