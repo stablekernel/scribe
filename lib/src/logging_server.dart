@@ -20,10 +20,12 @@ class LoggingServer {
   Future start() async {
     print("Starting logging server...");
     var fromLoggingIsolateReceivePort = new ReceivePort();
+    fromLoggingIsolateReceivePort.listen((msg) {
+      print("$msg");
+    });
     print("Starting logging isolate...");
     try {
-      _loggingIsolate = await Isolate.spawn(
-          _logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends]);
+      _loggingIsolate = await Isolate.spawn(_logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends], errorsAreFatal: true, onError: fromLoggingIsolateReceivePort);
     } catch (e) {
       print("Logging isolate fialed to start: $e");
     }
