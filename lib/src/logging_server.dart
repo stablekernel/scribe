@@ -25,7 +25,7 @@ class LoggingServer {
     });
     print("Starting logging isolate...");
     try {
-      _loggingIsolate = await Isolate.spawn(_logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends], errorsAreFatal: true, onError: fromLoggingIsolateReceivePort);
+      _loggingIsolate = await Isolate.spawn(_logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends], paused: false, errorsAreFatal: true);
     } catch (e) {
       print("Logging isolate fialed to start: $e");
     }
