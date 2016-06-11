@@ -1,7 +1,6 @@
 // Copyright (c) 2016, <your name>. All rights reserved. Use of this source code
 // is governed by a BSD-style license that can be found in the LICENSE file.
 
-
 part of scribe;
 
 class LoggingServer {
@@ -44,9 +43,7 @@ class _SafeLogRecord implements LogRecord {
   final Error error = null;
   final int sequenceNumber = 0;
 
-  _SafeLogRecord(this.level, this.message, this.loggerName, this.time, this.stackTrace) {
-
-  }
+  _SafeLogRecord(this.level, this.message, this.loggerName, this.time, this.stackTrace) {}
 
   String toString() => '[$level] $time $loggerName: $message';
 }

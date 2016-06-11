@@ -12,3 +12,7 @@ workspace.xml
 
 # Include when developing application packages.
 pubspec.lock
+
+.packages
+*.iml
+.idea/
