@@ -23,9 +23,6 @@ class LoggingServer {
     }
 
     var fromLoggingIsolateReceivePort = new ReceivePort();
-    fromLoggingIsolateReceivePort.listen((msg) {
-    });
-
     _loggingIsolate = await Isolate.spawn(_logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends]);
     _destinationPort = await fromLoggingIsolateReceivePort.first;
   }
