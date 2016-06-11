@@ -6,7 +6,7 @@ part of scribe;
 
 class LoggingServer {
   LoggingServer(List<LoggingBackend> backends) {
-    _backends = backends;
+    _backends = backends ?? [];
   }
 
   List<LoggingBackend> _backends;
@@ -18,6 +18,10 @@ class LoggingServer {
   }
 
   Future start() async {
+    if (_backends.isEmpty) {
+      return;
+    }
+
     var fromLoggingIsolateReceivePort = new ReceivePort();
     _loggingIsolate = await Isolate.spawn(_logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends]);
     _destinationPort = await fromLoggingIsolateReceivePort.first;
@@ -59,7 +63,6 @@ Future _logEntryPoint(List<dynamic> arguments) async {
   });
 
   port.send(fromListenerReceivePort.sendPort);
-  port = null;
 }
 
 class LogListenerException implements Exception {
