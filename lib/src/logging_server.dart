@@ -18,9 +18,13 @@ class LoggingServer {
   }
 
   Future start() async {
+    print("Starting logging server...");
     var fromLoggingIsolateReceivePort = new ReceivePort();
+    print("Starting logging isolate...");
     _loggingIsolate = await Isolate.spawn(_logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends]);
+    print("Waiting for logging isolate to respond...");
     _destinationPort = await fromLoggingIsolateReceivePort.first;
+    print("Logging server started");
   }
 
   void stop() {
@@ -48,6 +52,7 @@ class _SafeLogRecord implements LogRecord {
 }
 
 Future _logEntryPoint(List<dynamic> arguments) async {
+  print("... Logging isolate entered.");
   SendPort port = arguments[0];
   List<LoggingBackend> backends = arguments[1];
 
@@ -58,8 +63,8 @@ Future _logEntryPoint(List<dynamic> arguments) async {
     backends.forEach((b) => b.log(record));
   });
 
+  print("Logging isolate responding...");
   port.send(fromListenerReceivePort.sendPort);
-  port = null;
 }
 
 class LogListenerException implements Exception {
