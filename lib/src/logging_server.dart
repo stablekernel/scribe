@@ -30,7 +30,7 @@ class LoggingServer {
       _loggingIsolate.addErrorListener(fromLoggingIsolateReceivePort.sendPort);
       print("Resuming");
       _loggingIsolate.resume(_loggingIsolate.pauseCapability);
-      print("resumed";)
+      print("resumed");
     } catch (e) {
       print("Logging isolate fialed to start: $e");
     }
