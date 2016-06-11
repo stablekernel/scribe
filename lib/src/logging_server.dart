@@ -18,6 +18,10 @@ class LoggingServer {
   }
 
   Future start() async {
+    if (_backends.isEmpty) {
+      return;
+    }
+
     print("Starting logging server...");
     var fromLoggingIsolateReceivePort = new ReceivePort();
     fromLoggingIsolateReceivePort.listen((msg) {
