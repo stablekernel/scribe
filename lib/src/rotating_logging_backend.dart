@@ -33,10 +33,12 @@ class RotatingLoggingBackend implements LoggingBackend {
   Future stop() async {
     _timer.cancel();
     await _fileSink.close();
+
+    _fileSink = null;
   }
 
   void _logRecord(LogRecord rec) {
-    _fileSink.writeln("$rec");
+    _fileSink?.writeln("$rec");
   }
 
   void log(LogRecord record) {
