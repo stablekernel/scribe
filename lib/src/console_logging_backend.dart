@@ -16,6 +16,10 @@ class ConsoleBackend implements LoggingBackend {
     }
   }
 
+  Future stop() async {
+    await outputSink?.close();
+  }
+
   void log(LogRecord record) {
     outputSink?.writeln("$record");
   }
