@@ -79,8 +79,8 @@ void main() {
     test("Log rotates on byte count", () async {
       logger = new Logger("rotatingLogger");
       listener = new LoggingServer([new RotatingLoggingBackend("${testDirectory.path}/test.log", maxSizeInMegabytes: 1)]);
-      await listener.start();
       await listener.getNewTarget().bind(logger);
+      await listener.start();
 
       String bytes = new List.generate(1024, (idx) => 'a').join("");
       var comp = new Completer();
