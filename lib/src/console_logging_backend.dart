@@ -1,27 +1,31 @@
 part of scribe;
 
+/// Logs messages to [stdout] or some other [IOSink].
 class ConsoleBackend implements LoggingBackend {
-  IOSink outputSink;
-  bool _nonBlocking;
-
+  /// Constructor for [ConsoleBackend].
+  ///
+  /// By default, [nonBlocking] is true. This will use [stdout]'s [nonBlocking].
   ConsoleBackend({bool nonBlocking: true}) {
     _nonBlocking = nonBlocking;
   }
 
+  IOSink _outputSink;
+  bool _nonBlocking;
+
   Future start() async {
     if (_nonBlocking) {
-      outputSink = stdout.nonBlocking;
+      _outputSink = stdout.nonBlocking;
     } else {
-      outputSink = stdout;
+      _outputSink = stdout;
     }
   }
 
   Future stop() async {
-    await outputSink?.close();
-    outputSink = null;
+    await _outputSink?.close();
+    _outputSink = null;
   }
 
   void log(LogRecord record) {
-    outputSink?.writeln("$record");
+    _outputSink?.writeln("$record");
   }
 }

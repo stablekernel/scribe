@@ -1,14 +1,14 @@
 name: scribe
 description: Logging backends for logging package.
-version: 0.0.1
-author: stable/kernel <jobs@stablekernel.com>
-homepage: http://www.stablekernel.com
+version: 0.1.0
+author: stable|kernel <http://stablekernel.com>
+homepage: https://github.com/stablekernel
 
 environment:
   sdk: '>=1.0.0 <2.0.0'
 
 dependencies:
-  logging: any
+  logging: ">=0.11.2 <0.12.0"
 
 dev_dependencies:
   test: '>=0.12.0 <0.13.0'

@@ -1,9 +1,20 @@
-// Copyright (c) 2016, <your name>. All rights reserved. Use of this source code
-// is governed by a BSD-style license that can be found in the LICENSE file.
-
 part of scribe;
 
+/// An object that redirects log messages to different [LoggingBackend]s.
+///
+/// A [LoggingServer] runs on its own [Isolate] and maintains a list of [LoggingBackend]s. When log messages
+/// are sent to a [LoggingServer] through its [LoggingTarget]s, the log message will be delivered to the logging
+/// isolate and then sent to each [LoggingBackend]. Example:
+///
+///         var server = new LoggingServer([new ConsoleBackend()]);
+///         server.getNewTarget().bind(new Logger("myLogger"));
+///         await server.start();
+///
 class LoggingServer {
+  /// Constructor for [LoggingServer].
+  ///
+  /// You must pass all [LoggingBackend]s to this constructor when instantiated. This server
+  /// will send all log messages to each backend.
   LoggingServer(List<LoggingBackend> backends) {
     _backends = backends ?? [];
   }
@@ -12,10 +23,17 @@ class LoggingServer {
   Isolate _loggingIsolate;
   SendPort _destinationPort;
 
+  /// Creates a new [LoggingTarget] for this logging server.
+  ///
+  /// In order for a [LoggingServer] to receive log messages, you must [LoggingTarget.bind] the returned
+  /// instance to a [Logger].
   LoggingTarget getNewTarget() {
     return new LoggingTarget(_destinationPort);
   }
 
+  /// Starts this logging server.
+  ///
+  /// A logging server will not start receiving log messages until it has been started.
   Future start() async {
     if (_backends.isEmpty) {
       return;
@@ -26,6 +44,9 @@ class LoggingServer {
     _destinationPort = await fromLoggingIsolateReceivePort.first;
   }
 
+  /// Stops this logging server.
+  ///
+  /// Kills the isolate running the log server.
   void stop() {
     _loggingIsolate?.kill();
   }

@@ -1,6 +1,14 @@
 part of scribe;
 
+/// Logging backend for [LoggingServer] that logs messages to rotating log files.
 class RotatingLoggingBackend implements LoggingBackend {
+  /// Creates a new [RotatingLoggingBackend].
+  ///
+  /// You must specify a base file name, such as 'api.log'. Rotated logs will be suffixed with an index, e.g., 'api.log.0'.
+  ///
+  /// By default, logs are rotated every 24 hours or when they reach 100MB of data. Three log files are kept in rotation.
+  ///
+  /// You may change these defaults by passing [duration], [maxSizeInMegabytes] and [logFileCount].
   RotatingLoggingBackend(String baseFileName, {Duration duration: const Duration(days: 1), int maxSizeInMegabytes: 100, int logFileCount: 3}) {
     _logFileCount = logFileCount;
     _maxSizeInBytes = maxSizeInMegabytes * 1024 * 1024;

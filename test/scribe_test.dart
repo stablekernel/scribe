@@ -71,7 +71,7 @@ void main() {
 
       await new Future.delayed(new Duration(milliseconds: 100));
 
-      var contents = new File("${Directory.current.path}/test.log").readAsStringSync();
+      var contents = new File("${testDirectory.path}/test.log").readAsStringSync();
       expect(contents, startsWith("[INFO]"));
       expect(contents, endsWith("Hello\n"));
     });
