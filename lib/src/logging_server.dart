@@ -40,7 +40,7 @@ class LoggingServer {
     }
 
     var fromLoggingIsolateReceivePort = new ReceivePort();
-    _loggingIsolate = await Isolate.spawn(_logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends]);
+    _loggingIsolate = await Isolate.spawn(logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends]);
     _destinationPort = await fromLoggingIsolateReceivePort.first;
   }
 
@@ -69,7 +69,7 @@ class _SafeLogRecord implements LogRecord {
   String toString() => '[$level] $time $loggerName: $message';
 }
 
-Future _logEntryPoint(List<dynamic> arguments) async {
+Future logEntryPoint(List<dynamic> arguments) async {
   SendPort port = arguments[0];
   List<LoggingBackend> backends = arguments[1];
 
