@@ -45,11 +45,11 @@ class RotatingLoggingBackend implements LoggingBackend {
     _fileSink = null;
   }
 
-  void _logRecord(LogRecord rec) {
+  void _logRecord(SafeLogRecord rec) {
     _fileSink?.writeln("$rec");
   }
 
-  void log(LogRecord record) {
+  void log(SafeLogRecord record) {
     try {
       var string = record.toString();
       int byteLength = string.length;

@@ -22,13 +22,15 @@ class LoggingServer {
   List<LoggingBackend> _backends;
   Isolate _loggingIsolate;
   SendPort _destinationPort;
+  StreamController<dynamic> _errorStreamController = new StreamController();
+  Stream<dynamic> get errorStream => _errorStreamController.stream;
 
   /// Creates a new [LoggingTarget] for this logging server.
   ///
   /// In order for a [LoggingServer] to receive log messages, you must [LoggingTarget.bind] the returned
   /// instance to a [Logger].
   LoggingTarget getNewTarget() {
-    return new LoggingTarget(_destinationPort);
+    return new LoggingTarget._(_destinationPort);
   }
 
   /// Starts this logging server.
@@ -40,8 +42,21 @@ class LoggingServer {
     }
 
     var fromLoggingIsolateReceivePort = new ReceivePort();
-    _loggingIsolate = await Isolate.spawn(_logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends]);
-    _destinationPort = await fromLoggingIsolateReceivePort.first;
+    _loggingIsolate = await Isolate.spawn(logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends]);
+
+    var completer = new Completer();
+    fromLoggingIsolateReceivePort.listen((msg) {
+      if (msg is SendPort) {
+        _destinationPort = msg;
+        completer.complete();
+        completer = null;
+      } else {
+        _errorStreamController.add(msg);
+        completer?.completeError(msg);
+      }
+    });
+
+    await completer.future;
   }
 
   /// Stops this logging server.
@@ -52,39 +67,42 @@ class LoggingServer {
   }
 }
 
-class _SafeLogRecord implements LogRecord {
+class SafeLogRecord {
   final Level level;
   final String message;
   final String loggerName;
   final DateTime time;
-  final StackTrace stackTrace;
+  final String stackTrace;
+  final String error;
 
-  final Object object = null;
-  final Zone zone = null;
-  final Error error = null;
-  final int sequenceNumber = 0;
+  SafeLogRecord(this.level, this.message, this.loggerName, this.time, this.stackTrace, this.error);
 
-  _SafeLogRecord(this.level, this.message, this.loggerName, this.time, this.stackTrace) {}
+  String toString() => "[$level] $time $loggerName: $message${error != null ? " ${_escapeNewlines(error)}" : ""}${stackTrace != null ? " ${_escapeNewlines(stackTrace)}" : ""}";
 
-  String toString() => '[$level] $time $loggerName: $message';
+  String _escapeNewlines(String str) {
+    return str.replaceAll("\n", "\\n");
+  }
 }
 
-Future _logEntryPoint(List<dynamic> arguments) async {
+Future logEntryPoint(List<dynamic> arguments) async {
   SendPort port = arguments[0];
   List<LoggingBackend> backends = arguments[1];
 
-  await Future.wait(backends.map((b) => b.start()));
+  try {
+    await Future.wait(backends.map((b) => b.start()), eagerError: true);
+  } catch (error) {
+    port.send(error);
+    return;
+  }
 
   var fromListenerReceivePort = new ReceivePort();
   fromListenerReceivePort.listen((record) {
-    backends.forEach((b) => b.log(record));
+    try {
+      backends.forEach((b) => b.log(record));
+    } catch (error) {
+      port.send(error);
+    }
   });
 
   port.send(fromListenerReceivePort.sendPort);
-}
-
-class LogListenerException implements Exception {
-  LogListenerException(this.message);
-
-  String message;
 }

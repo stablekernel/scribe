@@ -25,7 +25,7 @@ class ConsoleBackend implements LoggingBackend {
     _outputSink = null;
   }
 
-  void log(LogRecord record) {
+  void log(SafeLogRecord record) {
     _outputSink?.writeln("$record");
   }
 }

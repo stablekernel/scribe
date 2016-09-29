@@ -14,7 +14,7 @@ void main() {
 
     setUp(() async {
       await listener.start();
-      await listener.getNewTarget().bind(logger);
+      listener.getNewTarget().bind(logger);
     });
 
     tearDown(() async {
@@ -34,7 +34,7 @@ void main() {
 
     setUp(() async {
       await listener.start();
-      await listener.getNewTarget().bind(logger);
+      listener.getNewTarget().bind(logger);
     });
     tearDown(() async {
       await listener.stop();
@@ -65,13 +65,16 @@ void main() {
       logger = new Logger("rotatingLogger");
       listener = new LoggingServer([new RotatingLoggingBackend("${testDirectory.path}/test.log", maxSizeInMegabytes: 1)]);
       await listener.start();
-      await listener.getNewTarget().bind(logger);
+      listener.getNewTarget().bind(logger);
+
+      var file = new File("${testDirectory.path}/test.log");
 
       logger.info("Hello");
+      logger.info("Hello");
 
-      await new Future.delayed(new Duration(milliseconds: 100));
+      await waitForLine(file);
 
-      var contents = new File("${testDirectory.path}/test.log").readAsStringSync();
+      var contents = file.readAsStringSync();
       expect(contents, startsWith("[INFO]"));
       expect(contents, endsWith("Hello\n"));
     });
@@ -80,7 +83,7 @@ void main() {
       logger = new Logger("rotatingLogger");
       listener = new LoggingServer([new RotatingLoggingBackend("${testDirectory.path}/test.log", maxSizeInMegabytes: 1)]);
       await listener.start();
-      await listener.getNewTarget().bind(logger);
+      listener.getNewTarget().bind(logger);
 
       String bytes = new List.generate(1024, (idx) => 'a').join("");
       var comp = new Completer();
@@ -109,7 +112,7 @@ void main() {
       logger = new Logger("rotatingLogger");
       listener = new LoggingServer([new RotatingLoggingBackend("${testDirectory.path}/test.log", duration: new Duration(seconds: 1))]);
       await listener.start();
-      await listener.getNewTarget().bind(logger);
+      listener.getNewTarget().bind(logger);
 
       var comp = new Completer();
       int counter = 0;
@@ -159,19 +162,19 @@ void main() {
       logger = new Logger("rotatingLogger");
       listener = new LoggingServer([new RotatingLoggingBackend("${testDirectory.path}/test.log", maxSizeInMegabytes: 1)]);
       await listener.start();
-      await listener.getNewTarget().bind(logger);
+      listener.getNewTarget().bind(logger);
 
       logger.info("Log 1");
-      await new Future.delayed(new Duration(milliseconds: 100));
+      await waitForLine(new File("${testDirectory.path}/test.log"));
       await listener.stop();
 
       logger = new Logger("rotatingLogger");
       listener = new LoggingServer([new RotatingLoggingBackend("${testDirectory.path}/test.log", maxSizeInMegabytes: 1)]);
       await listener.start();
-      await listener.getNewTarget().bind(logger);
+      listener.getNewTarget().bind(logger);
 
       logger.info("Log 2");
-      await new Future.delayed(new Duration(milliseconds: 100));
+      await waitForLine(new File("${testDirectory.path}/test.log"));
       await listener.stop();
 
       var f1 = new File("${testDirectory.path}/test.log");
@@ -193,19 +196,19 @@ void main() {
       logger = new Logger("rotatingLogger");
       listener = new LoggingServer([new RotatingLoggingBackend("${testDirectory.path}/test.log", maxSizeInMegabytes: 1)]);
       await listener.start();
-      await listener.getNewTarget().bind(logger);
+      listener.getNewTarget().bind(logger);
 
       logger.info("Log 1");
-      await new Future.delayed(new Duration(milliseconds: 100));
+      await waitForLine(new File("${testDirectory.path}/test.log"));
       await listener.stop();
 
       logger = new Logger("rotatingLogger");
       listener = new LoggingServer([new RotatingLoggingBackend("${testDirectory.path}/test.log", maxSizeInMegabytes: 1)]);
       await listener.start();
-      await listener.getNewTarget().bind(logger);
+      listener.getNewTarget().bind(logger);
 
       logger.info("Log 2");
-      await new Future.delayed(new Duration(milliseconds: 100));
+      await waitForLine(new File("${testDirectory.path}/test.log"));
       await listener.stop();
 
       var f1 = new File("${testDirectory.path}/test.log");
@@ -216,6 +219,30 @@ void main() {
       expect(f1.readAsStringSync(), contains("rotatingLogger: Log 2"));
       expect(f2.readAsStringSync(), contains("rotatingLogger: Log 1"));
     });
-  });
 
+    test("Log statements with error or stacktrace contain that info", () async {
+      Logger logger = new Logger("rotatingLogger");
+      LoggingServer listener = new LoggingServer([new RotatingLoggingBackend("${testDirectory.path}/test.log", maxSizeInMegabytes: 1)]);
+
+      await listener.start();
+      listener.getNewTarget().bind(logger);
+
+      try {
+        expect(1, 0);
+      } catch (e, st) {
+        logger.info("Record", e, st);
+      }
+
+      var f1 = new File("${testDirectory.path}/test.log");
+      await waitForLine(f1);
+
+      var contents = f1.readAsStringSync();
+      expect(contents.contains("rotatingLogger: Record Expected: <0>\\n"), true);
+      expect(contents.contains("#1"), true);
+    });
+  });
+}
+
+Future waitForLine(File f, {int count: 1}) async {
+  while (f.readAsStringSync().split("\n").length < count + 1) {}
 }

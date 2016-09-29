@@ -6,21 +6,18 @@ part of scribe;
 /// Use [LoggingServer.getNewTarget] to get a new instance of [LoggingTarget].
 /// Pass a [Logger] to the [bind] method to send its messages to the owning [LoggingServer].
 class LoggingTarget {
-  /// Constructor for [LoggingTarget].
-  ///
-  /// Do not invoke this yourself.
-  LoggingTarget(this._toLoggerIsolatePort);
+  LoggingTarget._(this._toLoggerIsolatePort);
 
   SendPort _toLoggerIsolatePort;
 
   /// Binds a [Logger] to this target.
   ///
   /// To start sending [logger] messages to the owner of this target, you must invoke this method.
-  Future bind(Logger logger) async {
+  void bind(Logger logger) {
     logger.onRecord.listen(_listener);
   }
 
   void _listener(LogRecord record) {
-    _toLoggerIsolatePort?.send(new _SafeLogRecord(record.level, record.message, record.loggerName, record.time, record.stackTrace));
+    _toLoggerIsolatePort?.send(new SafeLogRecord(record.level, record.message, record.loggerName, record.time, record.stackTrace?.toString(), record.error?.toString()));
   }
 }

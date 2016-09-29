@@ -16,5 +16,5 @@ abstract class LoggingBackend {
   /// Received when [LoggingServer] sends a log message.
   ///
   /// This method is the core method of this backend. It will interpret and 'log' the [record] as determined by this backend.
-  void log(LogRecord record);
+  void log(SafeLogRecord record);
 }
