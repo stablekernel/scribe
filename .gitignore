@@ -15,4 +15,4 @@ pubspec.lock
 
 .packages
 *.iml
-.idea/
+.idea
