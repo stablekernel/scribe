@@ -21,6 +21,7 @@ class LoggingServer {
 
   List<LoggingBackend> _backends;
   Isolate _loggingIsolate;
+  Completer _stopCompleter;
   SendPort _destinationPort;
   StreamController<dynamic> _errorStreamController = new StreamController();
   Stream<dynamic> get errorStream => _errorStreamController.stream;
@@ -42,28 +43,45 @@ class LoggingServer {
     }
 
     var fromLoggingIsolateReceivePort = new ReceivePort();
-    _loggingIsolate = await Isolate.spawn(logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends]);
+    _loggingIsolate = await Isolate.spawn(logEntryPoint, [fromLoggingIsolateReceivePort.sendPort, _backends], paused: true);
+    _loggingIsolate.setErrorsFatal(false);
+    _loggingIsolate.addErrorListener(fromLoggingIsolateReceivePort.sendPort);
+    _loggingIsolate.resume(_loggingIsolate.pauseCapability);
 
-    var completer = new Completer();
+    var launchCompleter = new Completer();
     fromLoggingIsolateReceivePort.listen((msg) {
       if (msg is SendPort) {
         _destinationPort = msg;
-        completer.complete();
-        completer = null;
-      } else {
-        _errorStreamController.add(msg);
-        completer?.completeError(msg);
+        launchCompleter.complete();
+        launchCompleter = null;
+      } else if (msg is List) {
+        _errorStreamController.addError(msg.first, new StackTrace.fromString(msg.last));
+
+        if (launchCompleter != null) {
+          launchCompleter.completeError(msg.first, new StackTrace.fromString(msg.last));
+          fromLoggingIsolateReceivePort.close();
+        }
+      } else if (msg == "stopAck") {
+        _stopCompleter.complete();
+        _stopCompleter = null;
+        fromLoggingIsolateReceivePort.close();
       }
     });
 
-    await completer.future;
+    await launchCompleter.future;
   }
 
   /// Stops this logging server.
   ///
   /// Kills the isolate running the log server.
-  void stop() {
-    _loggingIsolate?.kill();
+  Future stop() async {
+    _stopCompleter = new Completer();
+    _destinationPort.send("stop");
+    await _stopCompleter.future;
+
+    if (_errorStreamController.hasListener) {
+      await _errorStreamController.close();
+    }
   }
 }
 
@@ -88,19 +106,17 @@ Future logEntryPoint(List<dynamic> arguments) async {
   SendPort port = arguments[0];
   List<LoggingBackend> backends = arguments[1];
 
-  try {
-    await Future.wait(backends.map((b) => b.start()), eagerError: true);
-  } catch (error) {
-    port.send(error);
-    return;
-  }
+  await Future.wait(backends.map((b) => b.start()), eagerError: true);
 
   var fromListenerReceivePort = new ReceivePort();
-  fromListenerReceivePort.listen((record) {
-    try {
-      backends.forEach((b) => b.log(record));
-    } catch (error) {
-      port.send(error);
+  fromListenerReceivePort.listen((message) {
+    if (message == "stop") {
+      Future.wait(backends.map((b) => b.stop())).then((_) {
+        fromListenerReceivePort.close();
+        port.send("stopAck");
+      });
+    } else {
+      backends.forEach((b) => b.log(message));
     }
   });
 

@@ -18,9 +18,10 @@ void main() {
   test("Backend that fails during message propogates that message back to error stream", () async {
     var s = new LoggingServer([new BadMessageBackend()]);
     var completers = <Completer>[new Completer(), new Completer()];
-    s.errorStream.listen((r) {
+    s.errorStream.listen((r) {}, onError: (e, st) {
       completers.first.complete();
       completers.removeAt(0);
+
     });
     await s.start();
 
@@ -31,6 +32,7 @@ void main() {
     logger.info("2");
 
     await Future.wait(completers.map((c) => c.future));
+    await s.stop();
   });
 }
 

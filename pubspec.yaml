@@ -2,7 +2,7 @@ name: scribe
 description: Logging backends for logging package.
 version: 0.2.0
 author: stable|kernel <http://stablekernel.com>
-homepage: https://github.com/stablekernel
+homepage: https://github.com/stablekernel/scribe
 documentation:
 
 environment:

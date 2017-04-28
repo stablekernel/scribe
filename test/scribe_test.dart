@@ -46,7 +46,6 @@ void main() {
     });
   });
 
-
   group('Rotating Logger', () {
     Logger logger = null;
     LoggingServer listener = null;

@@ -21,8 +21,7 @@ class ConsoleBackend implements LoggingBackend {
   }
 
   Future stop() async {
-    await _outputSink?.close();
-    _outputSink = null;
+
   }
 
   void log(SafeLogRecord record) {
