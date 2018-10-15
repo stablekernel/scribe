@@ -71,7 +71,7 @@ void main() {
       logger.info("Hello");
       logger.info("Hello");
 
-      await waitForLine(file);
+      await waitForLine(file, count: 2);
 
       var contents = file.readAsStringSync();
       expect(contents, startsWith("[INFO]"));
