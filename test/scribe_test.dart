@@ -139,7 +139,7 @@ void main() {
 
       expect(testDirectory.listSync()
           .where((fs) => fs is File)
-          .where((File fs) => fs.uri.path.contains("test.log")).length, 3);
+          .where((FileSystemEntity fs) => fs.uri.path.contains("test.log")).length, 3);
     });
   });
 
